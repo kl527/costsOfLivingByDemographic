@@ -1,12 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>costOfLivingByDemographic</title>
-</head>
-<body>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+  </head>
+  <body>
     <h1>names</h1>
-    <script></script>
-</body>
+    <script>
+      d3.csv("cleanDataset.csv").then((data) => {
+        const updatedData = data.map((d) => {
+          let newObj = { ...d };
+          const fieldsToConvert = [
+            "total_budget_avg",
+            "asian_hourly",
+            "white_hourly",
+            "black_hourly",
+            "hispanic_hourly",
+          ];
+          fieldsToConvert.forEach((field) => {
+            newObj[field] = Number(newObj[field]);
+          });
+
+          return newObj;
+        });
+        const testCouple =
+          (updatedData[0].white_hourly + updatedData[0].hispanic_hourly) * 2080;
+        const testMarried = "2";
+        const testChildren = "3";
+
+        console.log(testCouple);
+
+        const testSearch = testMarried + "p" + testChildren + "c";
+
+        const filteredData = updatedData.filter((d) => {
+          return d.family === testSearch;
+        });
+        const updatedFilteredData = filteredData.map((d) => {
+          let newObj = { ...d };
+          newObj.is_below_budget = testCouple > d.total_budget_avg;
+          return newObj;
+        });
+
+        console.log(updatedFilteredData);
+      });
+    </script>
+  </body>
 </html>
