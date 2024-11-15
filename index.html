@@ -1,116 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>costOfLivingByDemographic</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/topojson@3"></script>
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>costOfLivingByDemographic</title>
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <script src="https://unpkg.com/topojson@3"></script>
+  <body>
+    <h1>names</h1>
+    <svg id="map" width="1000" height="1000"></svg>
+    <script>
+      let updatedFilteredData = [];
 
-</head>
+      d3.csv("dataset_fips.csv").then((data) => {
+        console.log(data);
+        const updatedData = data.map((d) => {
+          let newObj = { ...d };
+          const fieldsToConvert = [
+            "total_budget_avg",
+            "asian_hourly",
+            "white_hourly",
+            "black_hourly",
+            "hispanic_hourly",
+            "men_median",
+            "women_median",
+          ];
+          fieldsToConvert.forEach((field) => {
+            newObj[field] = Number(newObj[field]);
+          });
 
-<body>
-  <h1>names</h1>
-  <script>
-    d3.csv("cleanDataset.csv").then((data) => {
-      const updatedData = data.map((d) => {
-        let newObj = { ...d };
-        const fieldsToConvert = [
-          "total_budget_avg",
-          "asian_hourly",
-          "white_hourly",
-          "black_hourly",
-          "hispanic_hourly",
-        ];
-        fieldsToConvert.forEach((field) => {
-          newObj[field] = Number(newObj[field]);
+          return newObj;
+        });
+        const testCouple =
+          (updatedData[0].white_hourly + updatedData[0].hispanic_hourly) * 2080;
+        const testMarried = "2";
+        const testChildren = "3";
+
+        const testSearch = testMarried + "p" + testChildren + "c";
+
+        const filteredData = updatedData.filter((d) => {
+          return d.family === testSearch;
         });
 
-        return newObj;
-      });
-      const testCouple =
-        (updatedData[0].white_hourly + updatedData[0].hispanic_hourly) * 2080;
-      const testMarried = "2";
-      const testChildren = "3";
+        updatedFilteredData = filteredData.map((d) => {
+          let newObj = { ...d };
+          newObj.is_below_budget = testCouple > d.total_budget_avg;
+          return newObj;
+        });
 
-      console.log(testCouple);
-
-      const testSearch = testMarried + "p" + testChildren + "c";
-
-      const filteredData = updatedData.filter((d) => {
-        return d.family === testSearch;
-      });
-      const updatedFilteredData = filteredData.map((d) => {
-        let newObj = { ...d };
-        newObj.is_below_budget = testCouple > d.total_budget_avg;
-        return newObj;
+        requestData();
       });
 
-      console.log(updatedFilteredData);
-    });
- 
-    const svg = d3.select("#map");
-    const width = svg.attr("width");
-    const height = svg.attr("height");
-    const margin = { top: 20, right: 20, bottom: 20, left: 20 };
-    const mapWidth = width - margin.left - margin.right;
-    const mapHeight = height - margin.top - margin.bottom;
-    const map = svg.append("g")
-      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      const svg = d3.select("#map");
+      const width = svg.attr("width");
+      const height = svg.attr("height");
+      const margin = { top: 20, right: 20, bottom: 20, left: 20 };
+      const mapWidth = width - margin.left - margin.right;
+      const mapHeight = height - margin.top - margin.bottom;
+      const map = svg
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    const requestData = async function () {
-      const us = await d3.json("us-counties.json");
-      console.log(us);
+      const requestData = async function () {
+        const us = await d3.json("us-counties.json");
+        console.log(us);
 
-      var counties = topojson.feature(us, us.objects.counties);
-      var countiesMesh = topojson.mesh(us, us.objects.counties);
-      var projection = d3.geoAlbersUsa().fitSize([mapWidth, mapHeight], counties);
-      console.log(projection)
-      var path = d3.geoPath().projection(projection);
-      console.log(path)
-      console.log(counties);
-      console.log(countiesMesh);
+        var counties = topojson.feature(us, us.objects.counties);
+        var countiesMesh = topojson.mesh(us, us.objects.counties);
+        var projection = d3
+          .geoAlbersUsa()
+          .fitSize([mapWidth, mapHeight], counties);
+        var path = d3.geoPath().projection(projection);
 
-      let graticule = d3.geoGraticule10();
-      console.log(graticule);
-      map.append("path").attr("class", "graticule").attr("d", path(graticule));
+        console.log(counties)
+        console.log(countiesMesh)
+        let graticule = d3.geoGraticule10();
+        map
+          .append("path")
+          .attr("class", "graticule")
+          .attr("d", path(graticule));
 
-      const budgetData = console.log(updatedFilteredData);
+        console.log(updatedFilteredData);
 
-      const countyDataDict = {};
-      updatedFilteredData.forEach((d) => {
-        countyDataDict[d.county] = d;
-      });
-      console.log(countyDataDict);
+        const countyDataDict = {};
+        updatedFilteredData.forEach((d) => {
+          countyDataDict[d.county_fips] = d;
+        });
 
-      let countiesPaths = map.selectAll("path.counties")
-        .data(counties.features)
-        .join("path")
-        .attr("class", "county")
-        .attr("d", path)
-        .attr("fill", d => {
-          const countyId = d.id;
-          const data = countyDataDict[countyId];
-          if (data) {
-            return data.is_below_budget ? "green" : "red";
-          } else {
-            return "gray";
-          }
-        })
-        .on('mouseover', mouseEntersCounty)
-        .on('mouseout', mouseLeavesCounty);
+        let countiesPaths = map
+          .selectAll("path.counties")
+          .data(counties.features)
+          .join("path")
+          .attr("class", "county")
+          .attr("d", path)
+          .attr("fill", (d) => {
+            const countyId = d.id.padStart(5, "0"); 
+            const data = countyDataDict[countyId];
+            if (data) {
+              return data.is_below_budget ? "green" : "red";
+            } else {
+              return "gray";
+            }
+          })
 
-      map.append("path").datum(countiesMesh)
-        .attr("class", "outline")
-        .attr("d", path);
+        map
+          .append("path")
+          .datum(countiesMesh)
+          .attr("class", "outline")
+          .attr("d", path);
+      };
 
-
-
-      requestData();
-    }
-  </script>
-
-</body>
-
+    </script>
+  </body>
 </html>
