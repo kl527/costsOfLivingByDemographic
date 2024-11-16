@@ -14,27 +14,24 @@
   <script src="https://unpkg.com/topojson@3"></script>
 </head>
 
-<style>
-  body {
-    font-family: "Lato", sans-serif;
-    ;
-  }
-
-  input[type="radio"] {
-    display: none;
-  }
-
-  input[type="radio"]+label {
-    display: inline-block;
-    height: 20px;
-    padding-left: 10px;
-    padding-right: 10px;
-    border: 2px solid #ccc;
-    border-radius: 4px;
-    cursor: pointer;
-    position: relative;
-    margin-right: 10px;
-  }
+  <style>
+    body{
+      font-family: "Lato", sans-serif;;
+    }
+    input[type="radio"] {
+      display: none;
+    }
+    input[type="radio"] + label {
+      display: inline-block;
+      height: 20px;
+      padding-left: 10px;
+      padding-right: 10px;
+      border: 2px solid #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+      margin-right: 10px;
+    }
 
   input[type="radio"]:checked+label {
     background-color: #007bff;
@@ -221,24 +218,70 @@
         map.transition().duration(1000).call(zoom.transform, newTransform);
 
       }
-
-      viewport.selectAll(".county")
-        .data(counties.features)
-        .join("path")
-        .attr("class", "county")
-        .attr("d", path)
-        .attr("fill", (d) => {
-          let countyData = updatedFilteredData.find(f => f.county_fips === d.id);
-
-          if (countyData) {
-            return countyData.is_below_budget ? "green" : "red";
-          } else {
-            return "lightgrey";
-          }
-        });
     }
     drawMap();
-  </script>
-</body>
 
+        requestData();
+      });
+
+      const svg = d3.select("#map");
+      const width = svg.attr("width");
+      const height = svg.attr("height");
+      const margin = { top: 20, right: 20, bottom: 20, left: 20 };
+      const mapWidth = width - margin.left - margin.right;
+      const mapHeight = height - margin.top - margin.bottom;
+      const map = svg
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      const requestData = async function () {
+        const us = await d3.json("us-counties.json");
+        console.log(us);
+
+        var counties = topojson.feature(us, us.objects.counties);
+        var countiesMesh = topojson.mesh(us, us.objects.counties);
+        var projection = d3
+          .geoAlbersUsa()
+          .fitSize([mapWidth, mapHeight], counties);
+        var path = d3.geoPath().projection(projection);
+
+        console.log(counties);
+        console.log(countiesMesh);
+        let graticule = d3.geoGraticule10();
+        map
+          .append("path")
+          .attr("class", "graticule")
+          .attr("d", path(graticule));
+
+        console.log(updatedFilteredData);
+
+        const countyDataDict = {};
+        updatedFilteredData.forEach((d) => {
+          countyDataDict[d.county_fips] = d;
+        });
+
+        let countiesPaths = map
+          .selectAll("path.counties")
+          .data(counties.features)
+          .join("path")
+          .attr("class", "county")
+          .attr("d", path)
+          .attr("fill", (d) => {
+            const countyId = d.id.padStart(5, "0");
+            const data = countyDataDict[countyId];
+            if (data) {
+              return data.is_below_budget ? "green" : "red";
+            } else {
+              return "gray";
+            }
+          });
+
+        map
+          .append("path")
+          .datum(countiesMesh)
+          .attr("class", "outline")
+          .attr("d", path);
+      };
+    </script>
+  </body>
 </html>
