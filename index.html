@@ -48,51 +48,48 @@
       .gridlines .domain {
         stroke: none;
       }
+      body {
+        font-family: "Lato", sans-serif;
+      }
+      input[type="radio"] {
+        display: none;
+      }
+      input[type="radio"] + label {
+        display: inline-block;
+        height: 20px;
+        padding-left: 10px;
+        padding-right: 10px;
+        border: 2px solid #ccc;
+        border-radius: 4px;
+        cursor: pointer;
+        position: relative;
+        margin-right: 10px;
+      }
+
+      input[type="radio"]:checked + label {
+        background-color: #007bff;
+        border-color: #007bff;
+      }
+
+      input[type="radio"] + label::after {
+        content: "";
+        position: absolute;
+        left: 30px;
+        top: -4px;
+        display: inline-block;
+        font-weight: normal;
+      }
+
+      .container {
+        display: flex;
+        justify-content: left;
+      }
+
+      .form {
+        width: 30%;
+      }
     </style>
   </head>
-
-  <style>
-    body {
-      font-family: "Lato", sans-serif;
-    }
-    input[type="radio"] {
-      display: none;
-    }
-    input[type="radio"] + label {
-      display: inline-block;
-      height: 20px;
-      padding-left: 10px;
-      padding-right: 10px;
-      border: 2px solid #ccc;
-      border-radius: 4px;
-      cursor: pointer;
-      position: relative;
-      margin-right: 10px;
-    }
-
-    input[type="radio"]:checked + label {
-      background-color: #007bff;
-      border-color: #007bff;
-    }
-
-    input[type="radio"] + label::after {
-      content: "";
-      position: absolute;
-      left: 30px;
-      top: -4px;
-      display: inline-block;
-      font-weight: normal;
-    }
-
-    .container {
-      display: flex;
-      justify-content: left;
-    }
-
-    .form {
-      width: 30%;
-    }
-  </style>
 
   <body>
     <h1>Diversity Average Incomes vs. Liveable Counties</h1>
@@ -147,28 +144,13 @@
         const filteredData = updatedData.filter((d) => {
           return d.family === testSearch;
         });
-
-        return newObj;
-      });
-      const testCouple =
-        (updatedData[0].white_hourly + updatedData[0].hispanic_hourly) * 2080;
-      const testMarried = "2";
-      const testChildren = "3";
-
-      const testSearch = testMarried + "p" + testChildren + "c";
-
-      const filteredData = updatedData.filter((d) => {
-        return d.family === testSearch;
-      });
-
-      updatedFilteredData = filteredData.map((d) => {
+        updatedFilteredData = filteredData.map((d) => {
         let newObj = { ...d };
         newObj.is_below_budget = testCouple > d.total_budget_avg;
         return newObj;
       });
-
       requestData();
-
+      });
       const drawMap = async () => {
         const us = await d3.json("us-counties.json");
         console.log(us);
@@ -185,31 +167,34 @@
         let path = d3.geoPath().projection(projection);
         let viewport = map.append("g");
 
-      viewport.append("path")
-        .attr("class", "graticule")
-        .attr("d", path(d3.geoGraticule10()));
-      // STATE POLYGONS
-      viewport.selectAll(".state").data(states.features)
-        .enter()
-        .append("path")
-        .attr("class", "state")
-        .attr("d", path);
-      // COUNTY POLYGONS
-      viewport.selectAll(".county").data(counties.features)
-        .enter()
-        .append("path")
-        .attr("class", "county")
-        .attr("d", path);
-      // COUNTY MESH
-      viewport.append("path")
-        .datum(countiesMesh)
-        .attr("class", "county-outline")
-        .attr("d", path);
-      // STATE MESH
-      viewport.append("path")
-        .datum(statesMesh)
-        .attr("class", "state-outline")
-        .attr("d", path);
+        viewport
+          .append("path")
+          .attr("class", "graticule")
+          .attr("d", path(d3.geoGraticule10())); 
+        viewport
+          .selectAll(".state")
+          .data(states.features)
+          .enter()
+          .append("path")
+          .attr("class", "state")
+          .attr("d", path); 
+        viewport
+          .selectAll(".county")
+          .data(counties.features)
+          .enter()
+          .append("path")
+          .attr("class", "county")
+          .attr("d", path); 
+        viewport
+          .append("path")
+          .datum(countiesMesh)
+          .attr("class", "county-outline")
+          .attr("d", path); 
+        viewport
+          .append("path")
+          .datum(statesMesh)
+          .attr("class", "state-outline")
+          .attr("d", path);
 
         var zoom = d3
           .zoom()
@@ -254,7 +239,7 @@
             Math.min(10, 0.9 / Math.max(dx / mapWidth, dy / mapHeight))
           );
 
-          let translate = [mapWidth / 2 - x * scale, mapHeight / 2 - y * scale];
+          let translate = [mapWidth / 2 - x * scale, mapHeight / 2 - y * scale]; 
 
           let newTransform = d3.zoomIdentity
             .translate(translate[0], translate[1])
@@ -262,69 +247,8 @@
 
           map.transition().duration(1000).call(zoom.transform, newTransform);
         }
-      };
+      }
       drawMap();
-
-      requestData();
-
-      const svg = d3.select("#map");
-      const width = svg.attr("width");
-      const height = svg.attr("height");
-      const margin = { top: 20, right: 20, bottom: 20, left: 20 };
-      const mapWidth = width - margin.left - margin.right;
-      const mapHeight = height - margin.top - margin.bottom;
-      const map = svg
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-      const requestData = async function () {
-        const us = await d3.json("us-counties.json");
-        console.log(us);
-
-        var counties = topojson.feature(us, us.objects.counties);
-        var countiesMesh = topojson.mesh(us, us.objects.counties);
-        var projection = d3
-          .geoAlbersUsa()
-          .fitSize([mapWidth, mapHeight], counties);
-        var path = d3.geoPath().projection(projection);
-
-        console.log(counties);
-        console.log(countiesMesh);
-        let graticule = d3.geoGraticule10();
-        map
-          .append("path")
-          .attr("class", "graticule")
-          .attr("d", path(graticule));
-
-        console.log(updatedFilteredData);
-
-        const countyDataDict = {};
-        updatedFilteredData.forEach((d) => {
-          countyDataDict[d.county_fips] = d;
-        });
-
-        let countiesPaths = map
-          .selectAll("path.counties")
-          .data(counties.features)
-          .join("path")
-          .attr("class", "county")
-          .attr("d", path)
-          .attr("fill", (d) => {
-            const countyId = d.id.padStart(5, "0");
-            const data = countyDataDict[countyId];
-            if (data) {
-              return data.is_below_budget ? "green" : "red";
-            } else {
-              return "gray";
-            }
-          });
-
-        map
-          .append("path")
-          .datum(countiesMesh)
-          .attr("class", "outline")
-          .attr("d", path);
-      };
     </script>
   </body>
 </html>
