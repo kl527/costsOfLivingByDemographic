@@ -15,8 +15,8 @@
   </head>
 
   <style>
-    body{
-      font-family: "Lato", sans-serif;;
+    body {
+      font-family: "Lato", sans-serif;
     }
     input[type="radio"] {
       display: none;
@@ -118,64 +118,122 @@
         requestData();
       });
 
-      const svg = d3.select("#map");
-      const width = svg.attr("width");
-      const height = svg.attr("height");
-      const margin = { top: 20, right: 20, bottom: 20, left: 20 };
-      const mapWidth = width - margin.left - margin.right;
-      const mapHeight = height - margin.top - margin.bottom;
-      const map = svg
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-      const requestData = async function () {
+      const drawMap = async () => {
         const us = await d3.json("us-counties.json");
         console.log(us);
 
-        var counties = topojson.feature(us, us.objects.counties);
-        var countiesMesh = topojson.mesh(us, us.objects.counties);
-        var projection = d3
-          .geoAlbersUsa()
-          .fitSize([mapWidth, mapHeight], counties);
-        var path = d3.geoPath().projection(projection);
+        const states = topojson.feature(us, us.objects.states);
+        const statesMesh = topojson.mesh(us, us.objects.states);
+        const counties = topojson.feature(us, us.objects.counties);
+        const countiesMesh = topojson.mesh(us, us.objects.counties);
 
-        console.log(counties);
-        console.log(countiesMesh);
-        let graticule = d3.geoGraticule10();
-        map
+        let map = d3.select("svg#map");
+        let mapWidth = map.attr("width");
+        let mapHeight = map.attr("height");
+        let projection = d3.geoAlbers().fitSize([mapWidth, mapHeight], states);
+        let path = d3.geoPath().projection(projection);
+        let viewport = map.append("g");
+
+        viewport
           .append("path")
           .attr("class", "graticule")
-          .attr("d", path(graticule));
+          .attr("d", path(d3.geoGraticule10())); // STATE POLYGONS
+        viewport
+          .selectAll(".state")
+          .data(states.features)
+          .enter()
+          .append("path")
+          .attr("class", "state")
+          .attr("d", path); // COUNTY POLYGONS
+        viewport
+          .selectAll(".county")
+          .data(counties.features)
+          .enter()
+          .append("path")
+          .attr("class", "county")
+          .attr("d", path); // COUNTY MESH
+        viewport
+          .append("path")
+          .datum(countiesMesh)
+          .attr("class", "county-outline")
+          .attr("d", path); // STATE MESH
+        viewport
+          .append("path")
+          .datum(statesMesh)
+          .attr("class", "state-outline")
+          .attr("d", path);
 
-        console.log(updatedFilteredData);
+        var zoom = d3
+          .zoom()
+          .scaleExtent([1, 20])
+          .translateExtent([
+            [-50, -50],
+            [mapWidth + 50, mapHeight + 50],
+          ]) // to lock to edges
+          .on("zoom", mapZoomed);
 
-        const countyDataDict = {};
-        updatedFilteredData.forEach((d) => {
-          countyDataDict[d.county_fips] = d;
-        });
+        map.call(zoom.transform, d3.zoomIdentity);
 
-        let countiesPaths = map
-          .selectAll("path.counties")
+        function mapZoomed({ transform }) {
+          viewport.attr("transform", transform.toString());
+          viewport
+            .select(".state-outline")
+            .style("stroke-width", 2 / transform.k);
+          viewport
+            .select(".county-outline")
+            .style("stroke-width", 1 / transform.k);
+          viewport
+            .select(".county-outline")
+            .attr("visibility", transform.k > 3 ? "visible" : "hidden");
+          viewport
+            .selectAll(".county")
+            .attr("visibility", transform.k > 3 ? "visible" : "hidden");
+        }
+
+        viewport.selectAll(".state").on("click", clicked);
+        viewport.selectAll(".county").on("click", clicked);
+
+        function clicked(event, d) {
+          console.log(d);
+
+          let bounds = path.bounds(d.geometry);
+          let dx = bounds[1][0] - bounds[0][0];
+          let dy = bounds[1][1] - bounds[0][1];
+          let x = (bounds[0][0] + bounds[1][0]) / 2;
+          let y = (bounds[0][1] + bounds[1][1]) / 2;
+          let scale = Math.max(
+            1,
+            Math.min(10, 0.9 / Math.max(dx / mapWidth, dy / mapHeight))
+          );
+
+          let translate = [mapWidth / 2 - x * scale, mapHeight / 2 - y * scale]; //  and then modify it using a .translate and .scale
+
+          let newTransform = d3.zoomIdentity
+            .translate(translate[0], translate[1])
+            .scale(scale);
+
+          map.transition().duration(1000).call(zoom.transform, newTransform);
+        }
+
+        viewport
+          .selectAll(".county")
           .data(counties.features)
           .join("path")
           .attr("class", "county")
           .attr("d", path)
           .attr("fill", (d) => {
-            const countyId = d.id.padStart(5, "0");
-            const data = countyDataDict[countyId];
-            if (data) {
-              return data.is_below_budget ? "green" : "red";
+            let countyData = updatedFilteredData.find(
+              (f) => f.county_fips === d.id
+            );
+
+            if (countyData) {
+              return countyData.is_below_budget ? "green" : "red";
             } else {
-              return "gray";
+              return "lightgrey";
             }
           });
-
-        map
-          .append("path")
-          .datum(countiesMesh)
-          .attr("class", "outline")
-          .attr("d", path);
       };
+      drawMap();
     </script>
   </body>
 </html>
