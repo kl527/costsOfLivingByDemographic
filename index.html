@@ -1,82 +1,151 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>costOfLivingByDemographic</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://d3js.org/topojson.v3.min.js"></script>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>costOfLivingByDemographic</title>
-  <link href="https://fonts.googleapis.com/css?family=Lato:400,700|Raleway:400,700" rel="stylesheet">
+    <style>
+      .county {
+        fill: slateblue;
+        stroke: none;
+      }
 
-  <link rel="stylesheet" type="text/css" href="../css/normalize.css">
-  <link rel="stylesheet" type="text/css" href="../css/skeleton.css">
-  <link rel="stylesheet" type="text/css" href="../css/custom-style.css">
-  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/styles/default.min.css">
-  <link rel="stylesheet" href="../css/hljs-base16.css">
-  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.2.0/highlight.min.js"></script>
+      .state {
+        fill: lightgrey;
+        stroke: none;
+      }
 
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <script src="https://d3js.org/topojson.v3.min.js"></script>
+      .county-outline {
+        stroke: darkblue;
+        stroke-width: 1px;
+        fill: none;
+      }
+
+      .state-outline {
+        stroke: darkgrey;
+        stroke-width: 2px;
+        fill: none;
+      }
+
+      .graticule {
+        fill: none;
+        stroke: lightgrey;
+      }
+
+      .gridlines line {
+        stroke: #bbb;
+      }
+
+      .gridlines .domain {
+        stroke: none;
+      }
+    </style>
+  </head>
 
   <style>
-    .county {
-      fill: slateblue;
-      stroke: none;
+    body {
+      font-family: "Lato", sans-serif;
+    }
+    input[type="radio"] {
+      display: none;
+    }
+    input[type="radio"] + label {
+      display: inline-block;
+      height: 20px;
+      padding-left: 10px;
+      padding-right: 10px;
+      border: 2px solid #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+      margin-right: 10px;
     }
 
-    .state {
-      fill: lightgrey;
-      stroke: none;
+    input[type="radio"]:checked + label {
+      background-color: #007bff;
+      border-color: #007bff;
     }
 
-    .county-outline {
-      stroke: darkblue;
-      stroke-width: 1px;
-      fill: none;
+    input[type="radio"] + label::after {
+      content: "";
+      position: absolute;
+      left: 30px;
+      top: -4px;
+      display: inline-block;
+      font-weight: normal;
     }
 
-    .state-outline {
-      stroke: darkgrey;
-      stroke-width: 2px;
-      fill: none;
+    .container {
+      display: flex;
+      justify-content: left;
     }
 
-    .graticule {
-      fill: none;
-      stroke: lightgrey;
+    .form {
+      width: 30%;
     }
-
-
-    .gridlines line {
-      stroke: #bbb;
-    }
-
-    .gridlines .domain {
-      stroke: none;
-    } 
   </style>
-</head>
 
-<body>
-  <h1>names</h1>
-  <svg id="map" width="1000" height="1000" style="background: #fff; margin-top:50px"></svg>
-  <script>
-    let updatedFilteredData = [];
+  <body>
+    <h1>Diversity Average Incomes vs. Liveable Counties</h1>
+    <p>Evelyn Kim (eck82), Luke Stewart (los22), Kyung Sub Lee (kl527)</p>
+    <form action="" class="form">
+      <p>Select your gender:</p>
+      <div class="container">
+        <input type="radio" id="male" name="fav_language" value="Male" />
+        <label for="male">Male</label><br />
+        <input type="radio" id="female" name="fav_language" value="Female" />
+        <label for="female">Female</label><br />
+      </div>
+      <p>Select your gender:</p>
+      <div class="container">
+        <input type="radio" id="male" name="fav_language" value="Male" />
+        <label for="male">Male</label><br />
+        <input type="radio" id="female" name="fav_language" value="Female" />
+        <label for="female">Female</label><br />
+      </div>
+    </form>
 
-    d3.csv("dataset_fips.csv").then((data) => {
-      console.log(data);
-      const updatedData = data.map((d) => {
-        let newObj = { ...d };
-        const fieldsToConvert = [
-          "total_budget_avg",
-          "asian_hourly",
-          "white_hourly",
-          "black_hourly",
-          "hispanic_hourly",
-          "men_median",
-          "women_median",
-        ];
-        fieldsToConvert.forEach((field) => {
-          newObj[field] = Number(newObj[field]);
+    <svg id="map" width="1000" height="1000"></svg>
+    <script>
+      let updatedFilteredData = [];
+
+      d3.csv("dataset_fips.csv").then((data) => {
+        console.log(data);
+        const updatedData = data.map((d) => {
+          let newObj = { ...d };
+          const fieldsToConvert = [
+            "total_budget_avg",
+            "asian_hourly",
+            "white_hourly",
+            "black_hourly",
+            "hispanic_hourly",
+            "men_median",
+            "women_median",
+          ];
+          fieldsToConvert.forEach((field) => {
+            newObj[field] = Number(newObj[field]);
+          });
+
+          return newObj;
+        });
+        const testCouple =
+          (updatedData[0].white_hourly + updatedData[0].hispanic_hourly) * 2080;
+        const testMarried = "2";
+        const testChildren = "3";
+
+        const testSearch = testMarried + "p" + testChildren + "c";
+
+        const filteredData = updatedData.filter((d) => {
+          return d.family === testSearch;
         });
 
         return newObj;
@@ -99,24 +168,22 @@
       });
 
       requestData();
-    });
 
-    const drawMap = async () => {
-      const us = await d3.json("us-counties.json");
-      console.log(us);
+      const drawMap = async () => {
+        const us = await d3.json("us-counties.json");
+        console.log(us);
 
+        const states = topojson.feature(us, us.objects.states);
+        const statesMesh = topojson.mesh(us, us.objects.states);
+        const counties = topojson.feature(us, us.objects.counties);
+        const countiesMesh = topojson.mesh(us, us.objects.counties);
 
-      const states = topojson.feature(us, us.objects.states);
-      const statesMesh = topojson.mesh(us, us.objects.states);
-      const counties = topojson.feature(us, us.objects.counties);
-      const countiesMesh = topojson.mesh(us, us.objects.counties);
-
-      let map = d3.select("svg#map");
-      let mapWidth = map.attr("width");
-      let mapHeight = map.attr("height");
-      let projection = d3.geoAlbers().fitSize([mapWidth, mapHeight], states);
-      let path = d3.geoPath().projection(projection);
-      let viewport = map.append("g");
+        let map = d3.select("svg#map");
+        let mapWidth = map.attr("width");
+        let mapHeight = map.attr("height");
+        let projection = d3.geoAlbers().fitSize([mapWidth, mapHeight], states);
+        let path = d3.geoPath().projection(projection);
+        let viewport = map.append("g");
 
       viewport.append("path")
         .attr("class", "graticule")
@@ -144,69 +211,120 @@
         .attr("class", "state-outline")
         .attr("d", path);
 
-      var zoom = d3.zoom()
-        .scaleExtent([1, 20])
-        .translateExtent([[-50, -50], [mapWidth + 50, mapHeight + 50]])  // to lock to edges
-        .on("zoom", mapZoomed);
+        var zoom = d3
+          .zoom()
+          .scaleExtent([1, 20])
+          .translateExtent([
+            [-50, -50],
+            [mapWidth + 50, mapHeight + 50],
+          ])
+          .on("zoom", mapZoomed);
 
-      map.call(zoom.transform, d3.zoomIdentity);
+        map.call(zoom.transform, d3.zoomIdentity);
 
-      function mapZoomed({ transform }) {
+        function mapZoomed({ transform }) {
+          viewport.attr("transform", transform.toString());
+          viewport
+            .select(".state-outline")
+            .style("stroke-width", 2 / transform.k);
+          viewport
+            .select(".county-outline")
+            .style("stroke-width", 1 / transform.k);
+          viewport
+            .select(".county-outline")
+            .attr("visibility", transform.k > 3 ? "visible" : "hidden");
+          viewport
+            .selectAll(".county")
+            .attr("visibility", transform.k > 3 ? "visible" : "hidden");
+        }
 
-        viewport.attr("transform", transform.toString());
-        viewport.select(".state-outline")
-          .style("stroke-width", 2 / transform.k);
-        viewport.select(".county-outline")
-          .style("stroke-width", 1 / transform.k);
-        viewport.select(".county-outline")
-          .attr("visibility", (transform.k > 3) ? "visible" : "hidden");
-        viewport.selectAll(".county")
-          .attr("visibility", (transform.k > 3) ? "visible" : "hidden");
-      }
+        viewport.selectAll(".state").on("click", clicked);
+        viewport.selectAll(".county").on("click", clicked);
 
-      viewport.selectAll(".state").on("click", clicked);
-      viewport.selectAll(".county").on("click", clicked);
+        function clicked(event, d) {
+          console.log(d);
 
+          let bounds = path.bounds(d.geometry);
+          let dx = bounds[1][0] - bounds[0][0];
+          let dy = bounds[1][1] - bounds[0][1];
+          let x = (bounds[0][0] + bounds[1][0]) / 2;
+          let y = (bounds[0][1] + bounds[1][1]) / 2;
+          let scale = Math.max(
+            1,
+            Math.min(10, 0.9 / Math.max(dx / mapWidth, dy / mapHeight))
+          );
 
-      function clicked(event, d) {
-        console.log(d)
+          let translate = [mapWidth / 2 - x * scale, mapHeight / 2 - y * scale];
 
-        let bounds = path.bounds(d.geometry);
-        let dx = bounds[1][0] - bounds[0][0];
-        let dy = bounds[1][1] - bounds[0][1];
-        let x = (bounds[0][0] + bounds[1][0]) / 2;
-        let y = (bounds[0][1] + bounds[1][1]) / 2;
-        let scale = Math.max(1, Math.min(10, 0.9 / Math.max(dx / mapWidth, dy / mapHeight)));
+          let newTransform = d3.zoomIdentity
+            .translate(translate[0], translate[1])
+            .scale(scale);
 
-        let translate = [mapWidth / 2 - x * scale, mapHeight / 2 - y * scale];
+          map.transition().duration(1000).call(zoom.transform, newTransform);
+        }
+      };
+      drawMap();
 
-        //  and then modify it using a .translate and .scale
-        let newTransform = d3.zoomIdentity
-          .translate(translate[0], translate[1])
-          .scale(scale);
+      requestData();
 
-        map.transition().duration(1000).call(zoom.transform, newTransform);
+      const svg = d3.select("#map");
+      const width = svg.attr("width");
+      const height = svg.attr("height");
+      const margin = { top: 20, right: 20, bottom: 20, left: 20 };
+      const mapWidth = width - margin.left - margin.right;
+      const mapHeight = height - margin.top - margin.bottom;
+      const map = svg
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-      }
+      const requestData = async function () {
+        const us = await d3.json("us-counties.json");
+        console.log(us);
 
-      viewport.selectAll(".county")
-        .data(counties.features)
-        .join("path")
-        .attr("class", "county")
-        .attr("d", path)
-        .attr("fill", (d) => {
-          let countyData = updatedFilteredData.find(f => f.county_fips === d.id);
+        var counties = topojson.feature(us, us.objects.counties);
+        var countiesMesh = topojson.mesh(us, us.objects.counties);
+        var projection = d3
+          .geoAlbersUsa()
+          .fitSize([mapWidth, mapHeight], counties);
+        var path = d3.geoPath().projection(projection);
 
-          if (countyData) {
-            return countyData.is_below_budget ? "green" : "red";
-          } else {
-            return "lightgrey";
-          }
+        console.log(counties);
+        console.log(countiesMesh);
+        let graticule = d3.geoGraticule10();
+        map
+          .append("path")
+          .attr("class", "graticule")
+          .attr("d", path(graticule));
+
+        console.log(updatedFilteredData);
+
+        const countyDataDict = {};
+        updatedFilteredData.forEach((d) => {
+          countyDataDict[d.county_fips] = d;
         });
-    }
-    drawMap();
 
-  </script>
-</body>
+        let countiesPaths = map
+          .selectAll("path.counties")
+          .data(counties.features)
+          .join("path")
+          .attr("class", "county")
+          .attr("d", path)
+          .attr("fill", (d) => {
+            const countyId = d.id.padStart(5, "0");
+            const data = countyDataDict[countyId];
+            if (data) {
+              return data.is_below_budget ? "green" : "red";
+            } else {
+              return "gray";
+            }
+          });
 
+        map
+          .append("path")
+          .datum(countiesMesh)
+          .attr("class", "outline")
+          .attr("d", path);
+      };
+    </script>
+  </body>
 </html>
