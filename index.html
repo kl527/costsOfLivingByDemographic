@@ -188,21 +188,6 @@
         map.transition().duration(1000).call(zoom.transform, newTransform);
 
       }
-
-      viewport.selectAll(".county")
-        .data(counties.features)
-        .join("path")
-        .attr("class", "county")
-        .attr("d", path)
-        .attr("fill", (d) => {
-          let countyData = updatedFilteredData.find(f => f.county_fips === d.id);
-
-          if (countyData) {
-            return countyData.is_below_budget ? "green" : "red";
-          } else {
-            return "lightgrey";
-          }
-        });
     }
     drawMap();
 
