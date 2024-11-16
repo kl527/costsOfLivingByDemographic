@@ -4,12 +4,77 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>costOfLivingByDemographic</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap"
+      rel="stylesheet"
+    />
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://unpkg.com/topojson@3"></script>
   </head>
 
+  <style>
+    body{
+      font-family: "Lato", sans-serif;;
+    }
+    input[type="radio"] {
+      display: none;
+    }
+    input[type="radio"] + label {
+      display: inline-block;
+      height: 20px;
+      padding-left: 10px;
+      padding-right: 10px;
+      border: 2px solid #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+      margin-right: 10px;
+    }
+
+    input[type="radio"]:checked + label {
+      background-color: #007bff;
+      border-color: #007bff;
+    }
+
+    input[type="radio"] + label::after {
+      content: "";
+      position: absolute;
+      left: 30px;
+      top: -4px;
+      display: inline-block;
+      font-weight: normal;
+    }
+    .container {
+      display: flex;
+      justify-content: left;
+    }
+    .form {
+      width: 30%;
+    }
+  </style>
+
   <body>
-    <h1>names</h1>
+    <h1 class="">Diversity Average Incomes vs. Liveable Counties</h1>
+    <p>Evelyn Kim (eck82), Luke Stewart (los22), Kyung Sub Lee (kl527)</p>
+    <form action="" class="form">
+      <p>Select your gender:</p>
+      <div class="container">
+        <input type="radio" id="male" name="fav_language" value="Male" />
+        <label for="male">Male</label><br />
+        <input type="radio" id="female" name="fav_language" value="Female" />
+        <label for="female">Female</label><br />
+      </div>
+      <p>Select your gender:</p>
+      <div class="container">
+        <input type="radio" id="male" name="fav_language" value="Male" />
+        <label for="male">Male</label><br />
+        <input type="radio" id="female" name="fav_language" value="Female" />
+        <label for="female">Female</label><br />
+      </div>
+    </form>
+
     <svg id="map" width="1000" height="1000"></svg>
     <script>
       let updatedFilteredData = [];
@@ -74,8 +139,8 @@
           .fitSize([mapWidth, mapHeight], counties);
         var path = d3.geoPath().projection(projection);
 
-        console.log(counties)
-        console.log(countiesMesh)
+        console.log(counties);
+        console.log(countiesMesh);
         let graticule = d3.geoGraticule10();
         map
           .append("path")
@@ -96,14 +161,14 @@
           .attr("class", "county")
           .attr("d", path)
           .attr("fill", (d) => {
-            const countyId = d.id.padStart(5, "0"); 
+            const countyId = d.id.padStart(5, "0");
             const data = countyDataDict[countyId];
             if (data) {
               return data.is_below_budget ? "green" : "red";
             } else {
               return "gray";
             }
-          })
+          });
 
         map
           .append("path")
@@ -111,7 +176,6 @@
           .attr("class", "outline")
           .attr("d", path);
       };
-
     </script>
   </body>
 </html>
