@@ -403,7 +403,7 @@
     }
     function updateMapColors() {
       d3.selectAll(".county").each(function (d) {
-        const countyData = finalData.find(f => f.id === d.id);
+        const countyData = finalData.find(f => f.county_fips == d.id);
         if (countyData) {
           d3.select(this).attr("fill", countyData.budgetAboveAverage ? "#4AAB79" : "#C91B13");
         }
