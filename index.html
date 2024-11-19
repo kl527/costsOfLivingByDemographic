@@ -24,7 +24,7 @@
     }
 
     .county-outline {
-      stroke: darkblue;
+      stroke: darkgrey;
       stroke-width: 1px;
       fill: none;
     }
@@ -159,6 +159,17 @@
       border-radius: 4px;
       background-color: #f9f9f9;
     }
+
+    .tooltip {
+      position: absolute;
+      background: white;
+      padding: 5px;
+      border: 1px solid black;
+      border-radius: 4px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
   </style>
 </head>
 <h1 class="flexBox">Which US Counties Can You Live In? Input Your Criteria to Find Out!</h1>
@@ -253,7 +264,7 @@
         click this if you don't have a partner
       </button>
     </form>
-    <svg id="map" width="900" height="600"></svg>
+    <svg id="map" width="770" height="600"></svg>
   </div>
 
   <script>
@@ -412,6 +423,10 @@
 
     const drawMap = async () => {
       const us = await d3.json("us-counties.json");
+      let filteredStates = ['2', '02', '15', '60', '66', '69', '72', '74', '78'];
+      us.objects.states.geometries = us.objects.states.geometries.filter(d => {
+        return filteredStates.indexOf(d.id.toString().padStart(2, '0')) === -1;
+      });
       console.log(us);
 
       const states = topojson.feature(us, us.objects.states);
@@ -470,20 +485,16 @@
       function mapZoomed({ transform }) {
         viewport.attr("transform", transform.toString());
         viewport
-          .select(".state-outline")
-          .style("stroke-width", 2 / transform.k);
-        viewport
           .select(".county-outline")
           .style("stroke-width", 1 / transform.k);
         viewport
           .select(".county-outline")
-          .attr("visibility", transform.k > 3 ? "visible" : "hidden");
+          .attr("visibility", transform.k > 1 ? "visible" : "hidden");
         viewport
           .selectAll(".county")
-          .attr("visibility", transform.k > 3 ? "visible" : "hidden");
+          .style("visibility", transform.k > 1 ? "visible" : "hidden");
       }
 
-      viewport.selectAll(".state").on("click", clicked);
       viewport.selectAll(".county").on("click", clicked);
 
       function clicked(event, d) {
@@ -507,6 +518,7 @@
 
         map.transition().duration(1000).call(zoom.transform, newTransform);
       }
+
     };
     drawMap();
     function addSpouseQuestions(event) {
