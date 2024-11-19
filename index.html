@@ -1,545 +1,675 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>costOfLivingByDemographic</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://d3js.org/topojson.v3.min.js"></script>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>costOfLivingByDemographic</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap"
-    rel="stylesheet" />
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <script src="https://d3js.org/topojson.v3.min.js"></script>
+    <style>
+      .county {
+        stroke: none;
+      }
 
-  <style>
-    .county {
-      stroke: none;
-    }
+      .state {
+        fill: lightgrey;
+        stroke: none;
+      }
 
-    .state {
-      fill: lightgrey;
-      stroke: none;
-    }
+      .county-outline {
+        stroke: darkgrey;
+        stroke-width: 1px;
+        fill: none;
+      }
 
-    .county-outline {
-      stroke: darkgrey;
-      stroke-width: 1px;
-      fill: none;
-    }
+      .state-outline {
+        stroke: darkgrey;
+        stroke-width: 2px;
+        fill: none;
+      }
 
-    .state-outline {
-      stroke: darkgrey;
-      stroke-width: 2px;
-      fill: none;
-    }
+      .graticule {
+        fill: none;
+        stroke: lightgrey;
+      }
 
-    .graticule {
-      fill: none;
-      stroke: lightgrey;
-    }
+      .gridlines line {
+        stroke: #bbb;
+      }
 
-    .gridlines line {
-      stroke: #bbb;
-    }
+      .gridlines .domain {
+        stroke: none;
+      }
 
-    .gridlines .domain {
-      stroke: none;
-    }
+      body {
+        font-family: "Lato", sans-serif;
+      }
 
-    body {
-      font-family: "Lato", sans-serif;
-    }
+      input[type="radio"] {
+        display: none;
+      }
 
-    input[type="radio"] {
-      display: none;
-    }
+      input[type="radio"] + label {
+        display: inline-block;
+        height: auto;
+        padding-top: 4px;
+        padding-bottom: 3px;
+        border: 2px solid #848884;
+        margin-right: 5px;
+        margin-left: 5px;
+        border-radius: 4px;
+        cursor: pointer;
+        position: relative;
+        width: 100px;
+        text-align: center;
+        line-height: 1.2;
+        color: #333;
+      }
 
-    input[type="radio"]+label {
-      display: inline-block;
-      height: auto;
-      padding-top: 4px;
-      padding-bottom: 3px;
-      border: 2px solid #848884;
-      margin-right: 5px;
-      margin-left: 5px;
-      border-radius: 4px;
-      cursor: pointer;
-      position: relative;
-      width: 100px;
-      text-align: center;
-      line-height: 1.2;
-      color: #333;
-    }
+      .container > :nth-child(3n) + label {
+        margin-right: 0;
+      }
 
-    .container> :nth-child(3n)+label {
-      margin-right: 0;
-    }
+      input[type="radio"]:checked + label {
+        background-color: #ffa316;
+        border-color: #ffa316;
+      }
 
-    input[type="radio"]:checked+label {
-      background-color: #ffa316;
-      border-color: #ffa316;
-    }
+      input[type="radio"] + label::after {
+        content: "";
+        position: absolute;
+        left: 30px;
+        top: -4px;
+        display: inline-block;
+        font-weight: normal;
+      }
 
-    input[type="radio"]+label::after {
-      content: "";
-      position: absolute;
-      left: 30px;
-      top: -4px;
-      display: inline-block;
-      font-weight: normal;
-    }
+      .container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+      }
 
-    .container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-    }
+      .container > * {
+        flex: 1 1 30%;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+        font-size: 14px;
+        gap: 10px;
+      }
 
-    .container>* {
-      flex: 1 1 30%;
-      box-sizing: border-box;
-      margin-bottom: 10px;
-      font-size: 14px;
-      gap: 10px;
-    }
+      .flexBox {
+        width: 90%;
+        display: flex;
+        justify-content: space-between;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 30px;
+      }
 
-    .flexBox {
-      width: 90%;
-      display: flex;
-      justify-content: space-between;
-      margin-left: auto;
-      margin-right: auto;
-      margin-top: 30px;
-    }
+      .form {
+        width: 30%;
+        background-color: #f9f9f9;
+        padding-left: 30px;
+        padding-right: 30px;
+      }
 
-    .form {
-      width: 30%;
-      background-color: #f9f9f9;
-      padding-left: 30px;
-      padding-right: 30px;
-    }
+      .subHeader {
+        font-size: 14px;
+        font-weight: bold;
+        margin-bottom: 4px;
+        margin-top: 8px;
+      }
 
-    .subHeader {
-      font-size: 14px;
-      font-weight: bold;
-      margin-bottom: 4px;
-      margin-top: 8px;
-    }
+      .submitButton {
+        width: 100%;
+        background-color: #ffa316;
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 10px 2px;
+        cursor: pointer;
+        border-radius: 4px;
+        font-weight: bold;
+      }
 
-    .submitButton {
-      width: 100%;
-      background-color: #ffa316;
-      border: none;
-      color: white;
-      padding: 10px 20px;
-      text-align: center;
-      text-decoration: none;
-      display: inline-block;
-      font-size: 16px;
-      margin: 10px 2px;
-      cursor: pointer;
-      border-radius: 4px;
-      font-weight: bold;
-    }
+      .spouseButton {
+        width: 100%;
+        border: 3px solid #ffa316;
+        color: #ffa316;
+        font-weight: bold;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 10px 2px;
+        cursor: pointer;
+        border-radius: 4px;
+        background-color: #f9f9f9;
+      }
 
-    .spouseButton {
-      width: 100%;
-      border: 3px solid #ffa316;
-      color: #ffa316;
-      font-weight: bold;
-      padding: 10px 20px;
-      text-align: center;
-      text-decoration: none;
-      display: inline-block;
-      font-size: 16px;
-      margin: 10px 2px;
-      cursor: pointer;
-      border-radius: 4px;
-      background-color: #f9f9f9;
-    }
+      .tooltip {
+        position: absolute;
+        background: white;
+        width: auto;
+        padding: 5px;
+        border: 1px solid black;
+        border-radius: 4px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+    </style>
+  </head>
+  <h1 class="flexBox">
+    Which US Counties Can You Live In? Input Your Criteria to Find Out!
+  </h1>
 
-    .tooltip {
-      position: absolute;
-      background: white;
-      padding: 5px;
-      border: 1px solid black;
-      border-radius: 4px;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.2s ease;
-    }
-  </style>
-</head>
-<h1 class="flexBox">Which US Counties Can You Live In? Input Your Criteria to Find Out!</h1>
-
-<body>
-  <div class="flexBox">
-    <form class="form" action="" class="form">
-      <p class="subHeader">Gender:</p>
-      <div class="container">
-        <input type="radio" id="male" name="gender" value="male" />
-        <label for="male">male</label><br />
-        <input type="radio" id="female" name="gender" value="female" />
-        <label for="female">female</label><br />
-      </div>
-      <p class="subHeader">Ethnicity:</p>
-      <div class="container">
-        <input type="radio" id="asian" name="ethnicity" value="asian" />
-        <label for="asian">asian</label><br />
-        <input type="radio" id="white" name="ethnicity" value="white" />
-        <label for="white">white</label><br />
-        <input type="radio" id="black" name="ethnicity" value="black" />
-        <label for="black">black</label><br />
-        <input type="radio" id="hispanic" name="ethnicity" value="hispanic" />
-        <label for="hispanic">hispanic</label><br />
-      </div>
-      <p class="subHeader">Education Level:</p>
-      <div class="container">
-        <input type="radio" id="lessThanHs" name="education" value="lessThanHs" />
-        <label for="lessThanHs">less than HS</label><br />
-        <input type="radio" id="hs" name="education" value="hs" />
-        <label for="hs">high school</label><br />
-        <input type="radio" id="college" name="education" value="college" />
-        <label for="college">associates degree</label><br />
-        <input type="radio" id="bachelors" name="education" value="bachelors" />
-        <label for="bachelors">bachelors degree</label><br />
-        <input type="radio" id="grad" name="education" value="grad" />
-        <label for="grad">graduate degree</label><br />
-      </div>
-      <p class="subHeader">Number of Children:</p>
-      <div class="container">
-        <input type="radio" id="0" name="children" value="0" />
-        <label for="0">zero (0)</label><br />
-        <input type="radio" id="1" name="children" value="1" />
-        <label for="1">one (1)</label><br />
-        <input type="radio" id="2" name="children" value="2" />
-        <label for="2">two (2)</label><br />
-        <input type="radio" id="3" name="children" value="3" />
-        <label for="3">three (3)</label><br />
-        <input type="radio" id="4" name="children" value="4" />
-        <label for="4">four (4)</label><br />
-      </div>
-      <div id="spouseQuestions" style="display: none">
-        <p class="subHeader">Partner's Gender:</p>
+  <body>
+    <div class="flexBox">
+      <form class="form" action="" class="form">
+        <p class="subHeader">Gender:</p>
         <div class="container">
-          <input type="radio" id="spouseMale" name="spouseGender" value="Male" />
-          <label for="spouseMale">male</label><br />
-          <input type="radio" id="spouseFemale" name="spouseGender" value="Female" />
-          <label for="spouseFemale">female</label><br />
+          <input type="radio" id="male" name="gender" value="male" checked/>
+          <label for="male">male</label><br />
+          <input type="radio" id="female" name="gender" value="female" />
+          <label for="female">female</label><br />
         </div>
-        <p class="subHeader">Partner's Ethnicity:</p>
+        <p class="subHeader">Ethnicity:</p>
         <div class="container">
-          <input type="radio" id="spouseAsian" name="spouseEthnicity" value="asian" />
-          <label for="spouseAsian">asian</label><br />
-          <input type="radio" id="spouseWhite" name="spouseEthnicity" value="white" />
-          <label for="spouseWhite">white</label><br />
-          <input type="radio" id="spouseBlack" name="spouseEthnicity" value="black" />
-          <label for="spouseBlack">black</label><br />
-          <input type="radio" id="spouseHispanic" name="spouseEthnicity" value="hispanic" />
-          <label for="spouseHispanic">hispanic</label><br />
+          <input type="radio" id="asian" name="ethnicity" value="asian" checked/>
+          <label for="asian">asian</label><br />
+          <input type="radio" id="white" name="ethnicity" value="white" />
+          <label for="white">white</label><br />
+          <input type="radio" id="black" name="ethnicity" value="black" />
+          <label for="black">black</label><br />
+          <input type="radio" id="hispanic" name="ethnicity" value="hispanic" />
+          <label for="hispanic">hispanic</label><br />
         </div>
-        <p class="subHeader">Partner's Education Level:</p>
+        <p class="subHeader">Education Level:</p>
         <div class="container">
-          <input type="radio" id="spouseLessThanHs" name="spouseEducation" value="lessThanHs" />
-          <label for="spouseLessThanHs">less than HS</label><br />
-          <input type="radio" id="spouseHs" name="spouseEducation" value="hs" />
-          <label for="spouseHs">high school</label><br />
-          <input type="radio" id="spouseCollege" name="spouseEducation" value="college" />
-          <label for="spouseCollege">associates degree</label><br />
-          <input type="radio" id="spouseBachelors" name="spouseEducation" value="bachelors" />
-          <label for="spouseBachelors">bachelors degree</label><br />
-          <input type="radio" id="spouseGrad" name="spouseEducation" value="grad" />
-          <label for="spouseGrad">graduate degree</label><br />
+          <input
+            type="radio"
+            id="lessThanHs"
+            name="education"
+            value="lessThanHs"
+            checked
+          />
+          <label for="lessThanHs">less than HS</label><br />
+          <input type="radio" id="hs" name="education" value="hs" />
+          <label for="hs">high school</label><br />
+          <input type="radio" id="college" name="education" value="college" />
+          <label for="college">associates degree</label><br />
+          <input
+            type="radio"
+            id="bachelors"
+            name="education"
+            value="bachelors"
+          />
+          <label for="bachelors">bachelors degree</label><br />
+          <input type="radio" id="grad" name="education" value="grad" />
+          <label for="grad">graduate degree</label><br />
         </div>
-      </div>
-      <button class="submitButton" onclick="event.preventDefault(); computeTotalBudget(); updateMapColors();">
-        SUBMIT
-      </button>
-      <button id="addSpouse" class="spouseButton" onclick="addSpouseQuestions(event)">
-        click this if you have a partner
-      </button>
-      <button id="removeSpouse" style="display: none" class="spouseButton" onclick="removeSpouseQuestions(event)">
-        click this if you don't have a partner
-      </button>
-    </form>
-    <svg id="map" width="770" height="600"></svg>
-  </div>
+        <p class="subHeader">Number of Children:</p>
+        <div class="container">
+          <input type="radio" id="0" name="children" value="0" checked/>
+          <label for="0">zero (0)</label><br />
+          <input type="radio" id="1" name="children" value="1" />
+          <label for="1">one (1)</label><br />
+          <input type="radio" id="2" name="children" value="2" />
+          <label for="2">two (2)</label><br />
+          <input type="radio" id="3" name="children" value="3" />
+          <label for="3">three (3)</label><br />
+          <input type="radio" id="4" name="children" value="4" />
+          <label for="4">four (4)</label><br />
+        </div>
+        <div id="spouseQuestions" style="display: none">
+          <p class="subHeader">Partner's Gender:</p>
+          <div class="container">
+            <input
+              type="radio"
+              id="spouseMale"
+              name="spouseGender"
+              value="Male"
+            />
+            <label for="spouseMale">male</label><br />
+            <input
+              type="radio"
+              id="spouseFemale"
+              name="spouseGender"
+              value="Female"
+            />
+            <label for="spouseFemale">female</label><br />
+          </div>
+          <p class="subHeader">Partner's Ethnicity:</p>
+          <div class="container">
+            <input
+              type="radio"
+              id="spouseAsian"
+              name="spouseEthnicity"
+              value="asian"
+            />
+            <label for="spouseAsian">asian</label><br />
+            <input
+              type="radio"
+              id="spouseWhite"
+              name="spouseEthnicity"
+              value="white"
+            />
+            <label for="spouseWhite">white</label><br />
+            <input
+              type="radio"
+              id="spouseBlack"
+              name="spouseEthnicity"
+              value="black"
+            />
+            <label for="spouseBlack">black</label><br />
+            <input
+              type="radio"
+              id="spouseHispanic"
+              name="spouseEthnicity"
+              value="hispanic"
+            />
+            <label for="spouseHispanic">hispanic</label><br />
+          </div>
+          <p class="subHeader">Partner's Education Level:</p>
+          <div class="container">
+            <input
+              type="radio"
+              id="spouseLessThanHs"
+              name="spouseEducation"
+              value="lessThanHs"
+            />
+            <label for="spouseLessThanHs">less than HS</label><br />
+            <input
+              type="radio"
+              id="spouseHs"
+              name="spouseEducation"
+              value="hs"
+            />
+            <label for="spouseHs">high school</label><br />
+            <input
+              type="radio"
+              id="spouseCollege"
+              name="spouseEducation"
+              value="college"
+            />
+            <label for="spouseCollege">associates degree</label><br />
+            <input
+              type="radio"
+              id="spouseBachelors"
+              name="spouseEducation"
+              value="bachelors"
+            />
+            <label for="spouseBachelors">bachelors degree</label><br />
+            <input
+              type="radio"
+              id="spouseGrad"
+              name="spouseEducation"
+              value="grad"
+            />
+            <label for="spouseGrad">graduate degree</label><br />
+          </div>
+        </div>
+        <button
+          class="submitButton"
+          onclick="event.preventDefault(); computeTotalBudget(); updateMapColors();"
+        >
+          SUBMIT
+        </button>
+        <button
+          id="addSpouse"
+          class="spouseButton"
+          onclick="addSpouseQuestions(event)"
+        >
+          click this if you have a partner
+        </button>
+        <button
+          id="removeSpouse"
+          style="display: none"
+          class="spouseButton"
+          onclick="removeSpouseQuestions(event)"
+        >
+          click this if you don't have a partner
+        </button>
+      </form>
+      <svg id="map" width="770" height="600"></svg>
+      <div id="tooltip" class="tooltip"></div>
+    </div>
 
-  <script>
-    let updatedData = [];
-    let finalData = [];
+    <script>
+      let updatedData = [];
+      let finalData = [];
 
-    d3.csv("dataset_fips.csv").then((data) => {
-      updatedData = data.map((d) => {
-        let newObj = { ...d };
-        const fieldsToConvert = [
-          "total_budget_avg",
-          "asian_hourly",
-          "white_hourly",
-          "black_hourly",
-          "hispanic_hourly",
-          "men_median",
-          "women_median",
-          "less_than_hs",
-          "high_school",
-          "associates_degree",
-          "bachelors_degree",
-          "advanced_degree",
-        ];
-        fieldsToConvert.forEach((field) => {
-          newObj[field] = Number(newObj[field]);
+      d3.csv("dataset_fips.csv").then((data) => {
+        updatedData = data.map((d) => {
+          let newObj = { ...d };
+          const fieldsToConvert = [
+            "total_budget_avg",
+            "asian_hourly",
+            "white_hourly",
+            "black_hourly",
+            "hispanic_hourly",
+            "men_median",
+            "women_median",
+            "less_than_hs",
+            "high_school",
+            "associates_degree",
+            "bachelors_degree",
+            "advanced_degree",
+          ];
+          fieldsToConvert.forEach((field) => {
+            newObj[field] = Number(newObj[field]);
+          });
+
+          return newObj;
         });
+        console.log(updatedData);
+        computeTotalBudget();
+        updateMapColors();
 
-        return newObj;
       });
-      console.log(updatedData);
-    });
-
-    function computeTotalBudget() {
-      // Getting selected demographic values from the form
-      const ethnicity = document.querySelector(
-        'input[name="ethnicity"]:checked'
-      )?.value;
-      const gender = document.querySelector(
-        'input[name="gender"]:checked'
-      )?.value;
-      const education = document.querySelector(
-        'input[name="education"]:checked'
-      )?.value;
-      const spouseEthnicity = document.querySelector(
-        'input[name="spouseEthnicity"]:checked'
-      )?.value;
-      const spouseGender = document.querySelector(
-        'input[name="spouseGender"]:checked'
-      )?.value;
-      const spouseEducation = document.querySelector(
-        'input[name="spouseEducation"]:checked'
-      )?.value;
-      const children = document.querySelector(
-        'input[name="children"]:checked'
-      )?.value;
-      console.log(updatedData);
-      // Default hourly rates for different fields (as per the dataset)
-      const hourlyRates = {
-        asian: updatedData[0]?.asian_hourly,
-        white: updatedData[0]?.white_hourly,
-        black: updatedData[0]?.black_hourly,
-        hispanic: updatedData[0]?.hispanic_hourly,
-      };
-
-      const educationRates = {
-        lessThanHs: updatedData[0]?.less_than_hs,
-        hs: updatedData[0]?.high_school,
-        college: updatedData[0]?.associates_degree,
-        bachelors: updatedData[0]?.bachelors_degree,
-        grad: updatedData[0]?.advanced_degree,
-      };
-      const genderRates = {
-        male: updatedData[0]?.men_median,
-        female: updatedData[0]?.women_median,
-      };
-
-      // Calculate individual average hourly wage based on selections
-      let totalHourly = 0;
-      let count = 0;
-
-      if (ethnicity && hourlyRates[ethnicity]) {
-        totalHourly += hourlyRates[ethnicity];
-        count++;
-      }
-
-      if (education && educationRates[education]) {
-        totalHourly += educationRates[education];
-        count++;
-      }
-      if (gender && genderRates[gender]) {
-        totalHourly += genderRates[gender];
-        count++;
-      }
-
-      const averageHourly = count > 0 ? totalHourly / count : 0;
-
-      let spouseAverageHourly = 0;
-      if (spouseEthnicity && spouseEducation && spouseGender) {
-        let spouseTotalHourly = 0;
-        let spouseCount = 0;
-
-        if (spouseEthnicity && hourlyRates[spouseEthnicity]) {
-          spouseTotalHourly += hourlyRates[spouseEthnicity];
-          spouseCount++;
-        }
-
-        if (spouseEducation && educationRates[spouseEducation]) {
-          spouseTotalHourly += educationRates[spouseEducation];
-          spouseCount++;
-        }
-
-        if (spouseGender && genderRates[spouseGender]) {
-          spouseTotalHourly += genderRates[spouseGender];
-          spouseCount++;
-        }
-
-        spouseAverageHourly = spouseCount > 0 ? spouseTotalHourly / spouseCount : 0;
-      }
-
-      // Compute total budget
-      let totalBudget = 0;
-      if (spouseEthnicity && spouseEducation && spouseGender) {
-        totalBudget = (averageHourly + spouseAverageHourly) * 2080;
-      } else {
-        totalBudget = averageHourly * 2080;
-      }
-
-      const family = spouseEthnicity && spouseEducation && spouseGender ? 2 : 1;
-      const familyAndChildren = family + 'p' + children + 'c';
-      updatedData = updatedData.map((d) => {
-        return {
-          ...d,
-          totalBudget: totalBudget,
-          target: familyAndChildren,
+      
+      function computeTotalBudget() {
+        // Getting selected demographic values from the form
+        const ethnicity = document.querySelector(
+          'input[name="ethnicity"]:checked'
+        )?.value;
+        const gender = document.querySelector(
+          'input[name="gender"]:checked'
+        )?.value;
+        const education = document.querySelector(
+          'input[name="education"]:checked'
+        )?.value;
+        const spouseEthnicity = document.querySelector(
+          'input[name="spouseEthnicity"]:checked'
+        )?.value;
+        const spouseGender = document.querySelector(
+          'input[name="spouseGender"]:checked'
+        )?.value;
+        const spouseEducation = document.querySelector(
+          'input[name="spouseEducation"]:checked'
+        )?.value;
+        const children = document.querySelector(
+          'input[name="children"]:checked'
+        )?.value;
+        console.log(updatedData);
+        // Default hourly rates for different fields (as per the dataset)
+        const hourlyRates = {
+          asian: updatedData[0]?.asian_hourly,
+          white: updatedData[0]?.white_hourly,
+          black: updatedData[0]?.black_hourly,
+          hispanic: updatedData[0]?.hispanic_hourly,
         };
-      });
-      console.log("Updated Data with Total Budget:", updatedData);
 
-      finalData = updatedData.filter((d) => d.family === d.target).map((d) => {
-        return {
-          ...d,
-          budgetAboveAverage: d.totalBudget > d.total_budget_avg,
+        const educationRates = {
+          lessThanHs: updatedData[0]?.less_than_hs,
+          hs: updatedData[0]?.high_school,
+          college: updatedData[0]?.associates_degree,
+          bachelors: updatedData[0]?.bachelors_degree,
+          grad: updatedData[0]?.advanced_degree,
         };
-      });
+        const genderRates = {
+          male: updatedData[0]?.men_median,
+          female: updatedData[0]?.women_median,
+        };
 
-      console.log("Final Data:", finalData);
-    }
-    function updateMapColors() {
-      d3.selectAll(".county").each(function (d) {
-        const countyData = finalData.find(f => f.county_fips == d.id);
-        if (countyData) {
-          d3.select(this).attr("fill", countyData.budgetAboveAverage ? "#4AAB79" : "#C91B13");
+        // Calculate individual average hourly wage based on selections
+        let totalHourly = 0;
+        let count = 0;
+
+        if (ethnicity && hourlyRates[ethnicity]) {
+          totalHourly += hourlyRates[ethnicity];
+          count++;
         }
-      });
-    }
 
-    const drawMap = async () => {
-      const us = await d3.json("us-counties.json");
-      let filteredStates = ['2', '02', '15', '60', '66', '69', '72', '74', '78'];
-      us.objects.states.geometries = us.objects.states.geometries.filter(d => {
-        return filteredStates.indexOf(d.id.toString().padStart(2, '0')) === -1;
-      });
-      console.log(us);
+        if (education && educationRates[education]) {
+          totalHourly += educationRates[education];
+          count++;
+        }
+        if (gender && genderRates[gender]) {
+          totalHourly += genderRates[gender];
+          count++;
+        }
 
-      const states = topojson.feature(us, us.objects.states);
-      const statesMesh = topojson.mesh(us, us.objects.states);
-      const counties = topojson.feature(us, us.objects.counties);
-      const countiesMesh = topojson.mesh(us, us.objects.counties);
-      d3.select("#map").style("border", "2px solid black");
+        const averageHourly = count > 0 ? totalHourly / count : 0;
 
-      let map = d3.select("svg#map");
-      let mapWidth = map.attr("width");
-      let mapHeight = map.attr("height");
-      let projection = d3.geoAlbers().fitSize([mapWidth, mapHeight], states);
-      let path = d3.geoPath().projection(projection);
-      let viewport = map.append("g");
+        let spouseAverageHourly = 0;
+        if (spouseEthnicity && spouseEducation && spouseGender) {
+          let spouseTotalHourly = 0;
+          let spouseCount = 0;
 
-      viewport
-        .append("path")
-        .attr("class", "graticule")
-        .attr("d", path(d3.geoGraticule10()));
-      viewport
-        .selectAll(".state")
-        .data(states.features)
-        .enter()
-        .append("path")
-        .attr("class", "state")
-        .attr("d", path);
-      viewport
-        .selectAll(".county")
-        .data(counties.features)
-        .enter()
-        .append("path")
-        .attr("class", "county")
-        .attr("d", path);
-      viewport
-        .append("path")
-        .datum(countiesMesh)
-        .attr("class", "county-outline")
-        .attr("d", path);
-      viewport
-        .append("path")
-        .datum(statesMesh)
-        .attr("class", "state-outline")
-        .attr("d", path);
+          if (spouseEthnicity && hourlyRates[spouseEthnicity]) {
+            spouseTotalHourly += hourlyRates[spouseEthnicity];
+            spouseCount++;
+          }
 
-      var zoom = d3
-        .zoom()
-        .scaleExtent([1, 20])
-        .translateExtent([
-          [-50, -50],
-          [mapWidth + 50, mapHeight + 50],
-        ])
-        .on("zoom", mapZoomed);
+          if (spouseEducation && educationRates[spouseEducation]) {
+            spouseTotalHourly += educationRates[spouseEducation];
+            spouseCount++;
+          }
 
-      map.call(zoom);
+          if (spouseGender && genderRates[spouseGender]) {
+            spouseTotalHourly += genderRates[spouseGender];
+            spouseCount++;
+          }
 
-      function mapZoomed({ transform }) {
-        viewport.attr("transform", transform.toString());
+          spouseAverageHourly =
+            spouseCount > 0 ? spouseTotalHourly / spouseCount : 0;
+        }
+
+        // Compute total budget
+        let totalBudget = 0;
+        if (spouseEthnicity && spouseEducation && spouseGender) {
+          totalBudget = (averageHourly + spouseAverageHourly) * 2080;
+        } else {
+          totalBudget = averageHourly * 2080;
+        }
+
+        const family =
+          spouseEthnicity && spouseEducation && spouseGender ? 2 : 1;
+        const familyAndChildren = family + "p" + children + "c";
+        updatedData = updatedData.map((d) => {
+          return {
+            ...d,
+            totalBudget: totalBudget,
+            target: familyAndChildren,
+          };
+        });
+        console.log("Updated Data with Total Budget:", updatedData);
+
+        finalData = updatedData
+          .filter((d) => d.family === d.target)
+          .map((d) => {
+            return {
+              ...d,
+              budgetAboveAverage: d.totalBudget > d.total_budget_avg,
+            };
+          });
+
+        console.log("Final Data:", finalData);
+      }
+      function updateMapColors() {
+        d3.selectAll(".county").each(function (d) {
+          const countyData = finalData.find((f) => f.county_fips == d.id);
+          if (countyData) {
+            d3.select(this).attr(
+              "fill",
+              countyData.budgetAboveAverage ? "#4AAB79" : "#C91B13"
+            );
+          } else {
+            d3.select(this).attr(
+              "fill",
+              "#4AAB79"
+            )
+          }
+        });
+      }
+
+      const drawMap = async () => {
+        const us = await d3.json("us-counties.json");
+        computeTotalBudget();
+        let filteredStates = [
+          "2",
+          "02",
+          "15",
+          "60",
+          "66",
+          "69",
+          "72",
+          "74",
+          "78",
+        ];
+        us.objects.states.geometries = us.objects.states.geometries.filter(
+          (d) => {
+            return (
+              filteredStates.indexOf(d.id.toString().padStart(2, "0")) === -1
+            );
+          }
+        );
+        console.log(us);
+
+        const states = topojson.feature(us, us.objects.states);
+        const statesMesh = topojson.mesh(us, us.objects.states);
+        const counties = topojson.feature(us, us.objects.counties);
+        const countiesMesh = topojson.mesh(us, us.objects.counties);
+        d3.select("#map").style("border", "2px solid black");
+
+        let map = d3.select("svg#map");
+        let mapWidth = map.attr("width");
+        let mapHeight = map.attr("height");
+        let projection = d3.geoAlbers().fitSize([mapWidth, mapHeight], states);
+        let path = d3.geoPath().projection(projection);
+        let viewport = map.append("g");
+
+        // Tooltip setup
+        let tooltip = d3.select("#tooltip");
+
         viewport
-          .select(".county-outline")
-          .style("stroke-width", 1 / transform.k);
+          .append("path")
+          .attr("class", "graticule")
+          .attr("d", path(d3.geoGraticule10()));
         viewport
-          .select(".county-outline")
-          .attr("visibility", transform.k > 1 ? "visible" : "hidden");
+          .selectAll(".state")
+          .data(states.features)
+          .enter()
+          .append("path")
+          .attr("class", "state")
+          .attr("d", path);
         viewport
           .selectAll(".county")
-          .style("visibility", transform.k > 1 ? "visible" : "hidden");
+          .data(counties.features)
+          .enter()
+          .append("path")
+          .attr("class", "county")
+          .attr("d", path)
+          .on("mouseover", function (event, d) {
+            const countyData = finalData.find((f) => f.county_fips == d.id);
+            if (countyData) {
+              const countyName = updatedData.find((u) => u.county_fips == d.id)?.county || "Unknown";
+              const totalBudget = updatedData.find((u) => u.county_fips == d.id)?.total_budget_avg || "Unknown";
+              tooltip.style("opacity", 1);
+              tooltip.html(`County: ${countyName}<br>County Total Budget Average: ${totalBudget} `);
+              let [x, y] = d3.pointer(event);
+              tooltip.style("left", `${event.pageX + 15}px`).style("top", `${event.pageY + 15}px`);            }
+          })
+          .on("mousemove", function (event) {
+            let [x, y] = d3.pointer(event);
+            tooltip.style("left", `${event.pageX + 15}px`).style("top", `${event.pageY + 15}px`);
+          })
+          .on("mouseout", function () {
+            tooltip.style("opacity", 0);
+          });
+        viewport
+          .append("path")
+          .datum(countiesMesh)
+          .attr("class", "county-outline")
+          .attr("d", path);
+        viewport
+          .append("path")
+          .datum(statesMesh)
+          .attr("class", "state-outline")
+          .attr("d", path);
+
+        var zoom = d3
+          .zoom()
+          .scaleExtent([1, 20])
+          .translateExtent([
+            [-50, -50],
+            [mapWidth + 50, mapHeight + 50],
+          ])
+          .on("zoom", mapZoomed);
+
+        map.call(zoom);
+
+        function mapZoomed({ transform }) {
+          viewport.attr("transform", transform.toString());
+          viewport
+            .select(".county-outline")
+            .style("stroke-width", 1 / transform.k);
+          viewport
+            .select(".county-outline")
+            .attr("visibility", transform.k > 1 ? "visible" : "hidden");
+          viewport
+            .selectAll(".county")
+            .style("visibility", transform.k > 1 ? "visible" : "hidden");
+        }
+
+        viewport.selectAll(".county").on("click", clicked);
+
+        function clicked(event, d) {
+          console.log(d);
+
+          let bounds = path.bounds(d.geometry);
+          let dx = bounds[1][0] - bounds[0][0];
+          let dy = bounds[1][1] - bounds[0][1];
+          let x = (bounds[0][0] + bounds[1][0]) / 2;
+          let y = (bounds[0][1] + bounds[1][1]) / 2;
+          let scale = Math.max(
+            1,
+            Math.min(10, 0.9 / Math.max(dx / mapWidth, dy / mapHeight))
+          );
+
+          let translate = [mapWidth / 2 - x * scale, mapHeight / 2 - y * scale];
+
+          let newTransform = d3.zoomIdentity
+            .translate(translate[0], translate[1])
+            .scale(scale);
+
+          map.transition().duration(1000).call(zoom.transform, newTransform);
+        }
+      };
+      drawMap();
+      function addSpouseQuestions(event) {
+        event.preventDefault();
+        const spouseDiv = document.getElementById("spouseQuestions");
+        const spouseButton = document.getElementById("addSpouse");
+        const removeButton = document.getElementById("removeSpouse");
+        spouseDiv.style.display = "block";
+        spouseButton.style.display = "none";
+        removeButton.style.display = "block";
       }
-
-      viewport.selectAll(".county").on("click", clicked);
-
-      function clicked(event, d) {
-        console.log(d);
-
-        let bounds = path.bounds(d.geometry);
-        let dx = bounds[1][0] - bounds[0][0];
-        let dy = bounds[1][1] - bounds[0][1];
-        let x = (bounds[0][0] + bounds[1][0]) / 2;
-        let y = (bounds[0][1] + bounds[1][1]) / 2;
-        let scale = Math.max(
-          1,
-          Math.min(10, 0.9 / Math.max(dx / mapWidth, dy / mapHeight))
-        );
-
-        let translate = [mapWidth / 2 - x * scale, mapHeight / 2 - y * scale];
-
-        let newTransform = d3.zoomIdentity
-          .translate(translate[0], translate[1])
-          .scale(scale);
-
-        map.transition().duration(1000).call(zoom.transform, newTransform);
+      function removeSpouseQuestions(event) {
+        event.preventDefault();
+        const spouseDiv = document.getElementById("spouseQuestions");
+        const spouseButton = document.getElementById("addSpouse");
+        const removeButton = document.getElementById("removeSpouse");
+        spouseDiv.style.display = "none";
+        spouseButton.style.display = "block";
+        removeButton.style.display = "none";
       }
-
-    };
-    drawMap();
-    function addSpouseQuestions(event) {
-      event.preventDefault();
-      const spouseDiv = document.getElementById("spouseQuestions");
-      const spouseButton = document.getElementById("addSpouse");
-      const removeButton = document.getElementById("removeSpouse");
-      spouseDiv.style.display = "block";
-      spouseButton.style.display = "none";
-      removeButton.style.display = "block";
-    }
-    function removeSpouseQuestions(event) {
-      event.preventDefault();
-      const spouseDiv = document.getElementById("spouseQuestions");
-      const spouseButton = document.getElementById("addSpouse");
-      const removeButton = document.getElementById("removeSpouse");
-      spouseDiv.style.display = "none";
-      spouseButton.style.display = "block";
-      removeButton.style.display = "none";
-    }
-  </script>
-</body>
-
+    </script>
+  </body>
 </html>
