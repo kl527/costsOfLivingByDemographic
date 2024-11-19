@@ -208,39 +208,39 @@
         <div class="container">
           <input
             type="radio"
-            id="children0"
+            id="0"
             name="children"
-            value="children0"
+            value="0"
           />
-          <label for="children0">zero (0)</label><br />
+          <label for="0">zero (0)</label><br />
           <input
             type="radio"
-            id="children1"
+            id="1"
             name="children"
-            value="children1"
+            value="1"
           />
-          <label for="children1">one (1)</label><br />
+          <label for="1">one (1)</label><br />
           <input
             type="radio"
-            id="children2"
+            id="2"
             name="children"
-            value="children2"
+            value="2"
           />
-          <label for="children2">two (2)</label><br />
+          <label for="2">two (2)</label><br />
           <input
             type="radio"
-            id="children3"
+            id="3"
             name="children"
-            value="children3"
+            value="3"
           />
-          <label for="children3">three (3)</label><br />
+          <label for="3">three (3)</label><br />
           <input
             type="radio"
-            id="children4"
+            id="4"
             name="children"
-            value="children4"
+            value="4"
           />
-          <label for="children4">four (4)</label><br />
+          <label for="4">four (4)</label><br />
         </div>
         <div id="spouseQuestions" style="display: none">
           <p class="subHeader">Spouse's Gender:</p>
@@ -357,6 +357,7 @@
 
     <script>
       let updatedData = [];
+      let finalData = [];
 
       d3.csv("dataset_fips.csv").then((data) => {
         updatedData = data.map((d) => {
@@ -403,6 +404,9 @@
         )?.value;
         const spouseEducation = document.querySelector(
           'input[name="spouseEducation"]:checked'
+        )?.value;
+        const children = document.querySelector(
+          'input[name="children"]:checked'
         )?.value;
         console.log(updatedData);
         // Default hourly rates for different fields (as per the dataset)
@@ -458,10 +462,28 @@
           count++;
         }
         // Compute total budget
+        const family = spouseEthnicity && spouseEducation && spouseGender ? 2 : 1;
+        const familyAndChildren = family + 'p' + children + 'c';
         const averageHourly = count > 0 ? totalHourly / count : 0;
         const totalBudget = averageHourly * 2080;
 
-        console.log("Total Budget for Selection:", totalBudget);
+        updatedData = updatedData.map((d) => {
+          return {
+            ...d,
+            totalBudget: totalBudget,
+            target: familyAndChildren,
+          };
+        });
+        console.log("Updated Data with Total Budget:", updatedData);
+
+        finalData = updatedData.filter((d) => d.family === d.target).map((d) => {
+          return {
+            ...d,
+            budgetAboveAverage: d.totalBudget < d.total_budget_avg,
+          };
+        });
+
+        console.log("Final Data:", finalData);
       }
 
       const drawMap = async () => {
