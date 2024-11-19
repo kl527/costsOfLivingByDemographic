@@ -1,4 +1,4 @@
-state_abv,county,county_fips,family,total_budget_avg,asian_hourly,white_hourly,black_hourly,hispanic_hourly,Less than HS: $17.47,High school: $22.94,Some college: $26.08,Bachelors degree: $43.26,Advanced degree: $55.33,men_median,women_median
+state_abv,county,county_fips,family,total_budget_avg,asian_hourly,white_hourly,black_hourly,hispanic_hourly,less_than_hs,high_school,associates_degree,bachelors_degree,advanced_degree,men_median,women_median
 AK,Aleutians East Borough,2013,1p0c,50352.0,29.87,25.97,20.11,19.93,17.47,22.94,26.08,43.26,55.33,25.43,21.96
 AK,Aleutians East Borough,2013,1p1c,79092.0,29.87,25.97,20.11,19.93,17.47,22.94,26.08,43.26,55.33,25.43,21.96
 AK,Aleutians East Borough,2013,1p2c,101604.0,29.87,25.97,20.11,19.93,17.47,22.94,26.08,43.26,55.33,25.43,21.96
