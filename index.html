@@ -446,27 +446,42 @@
           totalHourly += genderRates[gender];
           count++;
         }
-        // Calculate spouse contribution if applicable
-        if (spouseEthnicity && hourlyRates[spouseEthnicity]) {
-          totalHourly += hourlyRates[spouseEthnicity];
-          count++;
+
+        const averageHourly = count > 0 ? totalHourly / count : 0;
+
+        let spouseAverageHourly = 0;
+        if (spouseEthnicity && spouseEducation && spouseGender) {
+          let spouseTotalHourly = 0;
+          let spouseCount = 0;
+
+          if (spouseEthnicity && hourlyRates[spouseEthnicity]) {
+            spouseTotalHourly += hourlyRates[spouseEthnicity];
+            spouseCount++;
+          }
+
+          if (spouseEducation && educationRates[spouseEducation]) {
+            spouseTotalHourly += educationRates[spouseEducation];
+            spouseCount++;
+          }
+
+          if (spouseGender && genderRates[spouseGender]) {
+            spouseTotalHourly += genderRates[spouseGender];
+            spouseCount++;
+          }
+
+          spouseAverageHourly = spouseCount > 0 ? spouseTotalHourly / spouseCount : 0;
         }
 
-        if (spouseEducation && educationRates[spouseEducation]) {
-          totalHourly += educationRates[spouseEducation];
-          count++;
-        }
-
-        if (spouseGender && genderRates[spouseGender]) {
-          totalHourly += genderRates[spouseGender];
-          count++;
-        }
         // Compute total budget
+        let totalBudget = 0;
+        if (spouseEthnicity && spouseEducation && spouseGender) {
+          totalBudget = (averageHourly + spouseAverageHourly) * 2080;
+        } else {
+          totalBudget = averageHourly * 2080;
+        }
+
         const family = spouseEthnicity && spouseEducation && spouseGender ? 2 : 1;
         const familyAndChildren = family + 'p' + children + 'c';
-        const averageHourly = count > 0 ? totalHourly / count : 0;
-        const totalBudget = averageHourly * 2080;
-
         updatedData = updatedData.map((d) => {
           return {
             ...d,
@@ -479,7 +494,7 @@
         finalData = updatedData.filter((d) => d.family === d.target).map((d) => {
           return {
             ...d,
-            budgetAboveAverage: d.totalBudget < d.total_budget_avg,
+            budgetAboveAverage: d.totalBudget > d.total_budget_avg,
           };
         });
 
