@@ -534,8 +534,8 @@
         .zoom()
         .scaleExtent([1, 10])
         .translateExtent([
-          [-50, -50],
-          [mapWidth + 50, mapHeight + 50],
+          [-10, -10],
+          [mapWidth, mapHeight],
         ])
         .on("zoom", mapZoomed);
 
@@ -548,10 +548,10 @@
           .style("stroke-width", 1 / transform.k);
         viewport
           .select(".county-outline")
-          .attr("visibility", transform.k > 1 ? "visible" : "hidden");
+          .attr("visibility", transform.k > 0.5 ? "visible" : "hidden");
         viewport
           .selectAll(".county")
-          .style("visibility", transform.k > 1 ? "visible" : "hidden");
+          .style("visibility", transform.k > 0.5 ? "visible" : "hidden");
       }
 
       viewport.selectAll(".county").on("click", clicked);
