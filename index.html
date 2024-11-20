@@ -120,6 +120,16 @@
       margin-top: 30px;
     }
 
+    .text {
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-end; 
+      position: absolute; 
+      bottom: 10px; 
+      right: 80px; 
+      font-size: 12px;
+    }
+
     .form {
       width: 30%;
       background-color: #f9f9f9;
@@ -285,7 +295,7 @@
         click this if you don't have a partner
       </button>
     </form>
-    <svg id="map" width="770" height="600"></svg>
+    <svg id="map" width="800" height="600"></svg>
     <div id="tooltip" class="tooltip"></div>
   </div>
 
@@ -329,7 +339,6 @@
     });
 
     function computeTotalBudget() {
-      // Getting selected demographic values from the form
       const ethnicity = document.querySelector(
         'input[name="ethnicity"]:checked'
       )?.value;
@@ -352,7 +361,7 @@
         'input[name="children"]:checked'
       )?.value;
       console.log(updatedData);
-      // Default hourly rates for different fields (as per the dataset)
+
       const hourlyRates = {
         asian: updatedData[0]?.asian_hourly,
         white: updatedData[0]?.white_hourly,
@@ -372,7 +381,6 @@
         female: updatedData[0]?.women_median,
       };
 
-      // Calculate individual average hourly wage based on selections
       let totalHourly = 0;
       let count = 0;
 
@@ -416,7 +424,6 @@
           spouseCount > 0 ? spouseTotalHourly / spouseCount : 0;
       }
 
-      // Compute total budget
       let totalBudget = 0;
       if (spouseEthnicity && spouseEducation && spouseGender) {
         totalBudget = (averageHourly + spouseAverageHourly) * 2080;
@@ -486,7 +493,6 @@
       let path = d3.geoPath().projection(projection);
       let viewport = map.append("g");
 
-      // Tooltip setup
       let tooltip = d3.select("#tooltip");
 
       viewport
@@ -524,7 +530,7 @@
             tooltip.style("opacity", 1);
             tooltip.html(
               `<strong>${countyName}</strong><br>
-              Total Budget: $${totalBudget}<br>
+              <strong>Total Budget: $${totalBudget}</strong><br>
               Housing Cost: ${housing}<br>
               Food Cost: ${food}<br>
               Transportation Cost: ${transportation}<br>
@@ -643,6 +649,7 @@
       removeButton.style.display = "none";
     }
   </script>
+  <p class="text">*Other Necessities: apparel, personal care, household supplies, reading materials, and school supplies</p>
 </body>
 
 </html>
