@@ -292,6 +292,7 @@
   <script>
     let updatedData = [];
     let finalData = [];
+    let epiData = [];
 
     d3.csv("dataset_fips.csv").then((data) => {
       updatedData = data.map((d) => {
@@ -320,6 +321,11 @@
       computeTotalBudget();
       updateMapColors();
 
+    });
+
+    d3.csv("epiData.csv").then((data) => {
+      epiData = data;
+      console.log("Loaded epiData.csv:", epiData);
     });
 
     function computeTotalBudget() {
@@ -506,8 +512,26 @@
           if (countyData) {
             const countyName = updatedData.find((u) => u.county_fips == d.id)?.county || "Unknown";
             const totalBudget = updatedData.find((u) => u.county_fips == d.id)?.total_budget_avg || "Unknown";
+            const epiDataForCounty = epiData.find((e) => e.county_fips == d.id) || {};
+            const housing = epiDataForCounty.housing_y || "Unknown";
+            const food = epiDataForCounty.food_y || "Unknown";
+            const transportation = epiDataForCounty.transportation_y || "Unknown";
+            const healthcare = epiDataForCounty.healthcare_y || "Unknown";
+            const otherNecessities = epiDataForCounty.other_necessities_y || "Unknown";
+            const childcare = epiDataForCounty.childcare_y || "Unknown";
+            const taxes = epiDataForCounty.taxes_y || "Unknown";
+
             tooltip.style("opacity", 1);
-            tooltip.html(`County: ${countyName}<br>County Avg Total Budget: $${totalBudget} `);
+            tooltip.html(
+              `<strong>${countyName}</strong><br>
+              Total Budget: $${totalBudget}<br>
+              Housing Cost: ${housing}<br>
+              Food Cost: ${food}<br>
+              Transportation Cost: ${transportation}<br>
+              Healthcare Cost: ${healthcare}<br>
+              Other Necessities: ${otherNecessities}<br>
+              Childcare Cost: ${childcare}<br>
+              Taxes: ${taxes}<br> `);
             let [x, y] = d3.pointer(event);
             tooltip.style("left", `${event.pageX + 15}px`).style("top", `${event.pageY + 15}px`);
           }
@@ -588,7 +612,7 @@
           countyData = finalData.find((f) => f.county_fips == "46102");
           console.log("Mapped 46113 to 46102:", countyData);
         }
-    
+
         if (countyData) {
           d3.select(this).attr(
             "fill",
@@ -599,7 +623,6 @@
         }
       });
     }
-
 
     function addSpouseQuestions(event) {
       event.preventDefault();
